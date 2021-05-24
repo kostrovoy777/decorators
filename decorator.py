@@ -1,5 +1,6 @@
 import time
 import random
+from functools import wraps
 
 
 def calc_duration(func):
@@ -118,6 +119,26 @@ def another_process(text: str) -> str:
     return text.replace(':', ',')
 
 
+def cache_result(func):
+    memo = {}
+
+    @wraps(func)
+    def wrapper(*args):
+        try:
+            return memo[args]
+        except KeyError:
+            rv = func(*args)
+            memo[args] = rv
+            return rv
+
+    return wrapper
+
+
+@cache_result
+def some_func(last_name, first_name, age):
+    return f'Hi {last_name} {first_name}, you are {age} years old'
+
+
 if __name__ == '__main__':
     long_executing_task()  # print "elapsed time is about <> seconds"
     print(potentially_unsafe_func('name'))  # everything is ok
@@ -126,3 +147,6 @@ if __name__ == '__main__':
     show_message('Howdy, howdy my little friend')
     print(process_text('the French revolution resulted in 3 concepts: freedom,equality,fraternity'))
     print(another_process('the French revolution resulted in 3 concepts: freedom,equality,fraternity'))
+    print(some_func('shulyak', 'dmitry', 30))  # call
+    print(some_func('ivanov', 'ivan', 25))  # call
+    print(some_func('shulyak', 'dmitry', 30))  # cache
